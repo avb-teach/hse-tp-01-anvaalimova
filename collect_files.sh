@@ -27,9 +27,7 @@ done
 [[ ! -d "$in" ]] && die "Input dir not found!"
 mkdir -p "$out"
 
-lst=$(find "$in" -type f)
-
-while IFS= read -r f; do
+find "$in" -type f | while IFS= read -r f; do
     rel="${f#$in/}"
     d=$(dirname "$rel")
     n=$(basename "$rel")
@@ -58,5 +56,4 @@ while IFS= read -r f; do
         done
         cp "$f" "${b}_${i}${ext}"
     fi
-
-done <<< "$lst"
+done
