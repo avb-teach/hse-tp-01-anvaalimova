@@ -1,18 +1,17 @@
 #!/bin/bash
 
-e() {
+die() {
     echo "$1"
     exit 1
 }
 
-[[ $# -lt 2 ]] && e "Usage: $0 <src> <dst> [--max_depth N]"
+[[ $# -lt 2 ]] && die "Usage: $0 <in_dir> <out_dir> [--max_depth N]"
 
-src="$1"
-dst="$2"
+in="$1"
+out="$2"
 depth=""
 
 shift 2
-
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --max_depth)
@@ -20,44 +19,44 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            e "Unknown parameter: $1"
+            die "Unknown parameter: $1"
             ;;
     esac
 done
 
-[[ ! -d "$src" ]] && e "Source not found!"
-mkdir -p "$dst"
+[[ ! -d "$in" ]] && die "Input dir not found!"
+mkdir -p "$out"
 
-files=$(find "$src" -type f)
+lst=$(find "$in" -type f)
 
 while IFS= read -r f; do
-    r="${f#$src/}"
-    d=$(dirname "$r")
-    n=$(basename "$r")
+    rel="${f#$in/}"
+    d=$(dirname "$rel")
+    n=$(basename "$rel")
 
     if [[ -n "$depth" ]]; then
         IFS='/' read -r -a p <<< "$d"
-        l=${#p[@]}
-        if (( l >= depth )); then
+        pc=${#p[@]}
+        if (( pc >= depth )); then
             d=$(IFS='/'; echo "${p[*]:0:$((depth-1))}")
-            r="$d/$n"
+            rel="$d/$n"
         fi
     fi
 
-    t="$dst/$r"
-    mkdir -p "$(dirname "$t")"
+    dst="$out/$rel"
+    mkdir -p "$(dirname "$dst")"
 
-    if [[ ! -e "$t" ]]; then
-        cp "$f" "$t"
+    if [[ ! -e "$dst" ]]; then
+        cp "$f" "$dst"
     else
-        b="${t%.*}"
-        e="${t##*.}"
-        [[ "$b" == "$e" ]] && e="" || e=".$e"
+        b="${dst%.*}"
+        ext="${dst##*.}"
+        [[ "$b" == "$ext" ]] && ext="" || ext=".$ext"
         i=1
-        while [[ -e "${b}_${i}${e}" ]]; do
+        while [[ -e "${b}_${i}${ext}" ]]; do
             ((i++))
         done
-        cp "$f" "${b}_${i}${e}"
+        cp "$f" "${b}_${i}${ext}"
     fi
-done <<< "$files"
 
+done <<< "$lst"
